@@ -1,0 +1,87 @@
+Typescript provides extra types on top of JavaScript.
+
+These types are checked before runtime which makes for a better dev environment.
+
+The types added are the following:
+
+<!-- prettier-ignore -->
++---------+-----------------+--------------------------------------------------------------------------+
+|  number |   1, 5.3, -10   |          All numbers, no differentiation between ints and floats         |
++---------+-----------------+--------------------------------------------------------------------------+
+|  string | "Hi",'Hi', `Hi` |                              All text values                             |
++---------+-----------------+--------------------------------------------------------------------------+
+| boolean |   true, false   |                  Just these two, no truthy/falsy values                  |
++---------+-----------------+--------------------------------------------------------------------------+
+|  object |     {age:30}    |        Any JS Obj, more specific types (types of obj) is possible        |
++---------+-----------------+--------------------------------------------------------------------------+
+|  Array  |     [1,2,3]     | Any JS arr, type can be flexible or strict (regarding the element types) |
++---------+-----------------+--------------------------------------------------------------------------+
+|  Tuple  |      [1,2]      |     Added by TS; Fixed-lengths array (.push can still mutate BAD!!!)     |
++---------+-----------------+--------------------------------------------------------------------------+
+|   Enum  |  enum{NEW, OLD} |     Added by TS; Automatically enumerated global constant identifiers    |
++---------+-----------------+--------------------------------------------------------------------------+
+
+---
+
+Union types
+
+Union types is a way to set multiple types to a single variable/arg
+Consider this example:
+
+<!-- prettier-ignore -->
++---------------------------------------------------------------+
+| const combine = (a: number | string, b: number | string) => { |
+|   let res;                                                    |
+|   if (typeof a === "number" && typeof b === "number") {       |
+|     res = a + b;                                              |
+|   } else {                                                    |
+|     res = a.toString() + b.toString();                        |
+|   }                                                           |
+|   return res;                                                 |
+| };                                                            |
++---------------------------------------------------------------+
+
+Here we are setting arguments a and b to either a number OR (as indicated by |) number.
+
+---
+
+Literal types
+
+If we want to add a specific value as a type, we can quite easily do so;
+
+<!-- prettier-ignore -->
++---------------------------------------------+
+| const combine = (                           |
+|   a: number | string,                       |
+|   b: number | string,                       |
+|   resultConversion: "as-number" | "as-text" |
+| ){                                          |
+|//do function                                |
+|}                                            |
++---------------------------------------------+
+
+Here we make sure that the argument "resultConversion" is always either "as-number" OR "as-text".
+
+---
+
+Type aliases // Custom types
+
+We can also create custom types/aliases, this is useful for creating smaller-reusable snippets.
+
+Consider following example;
+
++------------------------------------------------------+
+| type Combinable = number | string; |
+| type ConversionDescriptor = "as-number" | "as-text"; |
+| |
+| const combine = ( |
+| a: Combinable, |
+| b: Combinable, |
+| resultConversion: ConversionDescriptor |
+| ){ |
+| //function body |
+| } |
++------------------------------------------------------+
+
+Instead of doing a: string | number and the same for B, we can create a custom type and use it for both.
+Same is true for resultConversion, that way we have a centralized place for our types.
