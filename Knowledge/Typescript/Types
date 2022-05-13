@@ -4,7 +4,6 @@ These types are checked before runtime which makes for a better dev environment.
 
 The types added are the following:
 
-<!-- prettier-ignore -->
 +---------+-----------------+--------------------------------------------------------------------------+
 |  number |   1, 5.3, -10   |          All numbers, no differentiation between ints and floats         |
 +---------+-----------------+--------------------------------------------------------------------------+
@@ -21,14 +20,13 @@ The types added are the following:
 |   Enum  |  enum{NEW, OLD} |     Added by TS; Automatically enumerated global constant identifiers    |
 +---------+-----------------+--------------------------------------------------------------------------+
 
----
+---------------------------------------------------------------------------------------------------------
 
 Union types
 
 Union types is a way to set multiple types to a single variable/arg
 Consider this example:
 
-<!-- prettier-ignore -->
 +---------------------------------------------------------------+
 | const combine = (a: number | string, b: number | string) => { |
 |   let res;                                                    |
@@ -43,13 +41,12 @@ Consider this example:
 
 Here we are setting arguments a and b to either a number OR (as indicated by |) number.
 
----
+---------------------------------------------------------------------------------------------------------
 
 Literal types
 
 If we want to add a specific value as a type, we can quite easily do so;
 
-<!-- prettier-ignore -->
 +---------------------------------------------+
 | const combine = (                           |
 |   a: number | string,                       |
@@ -62,7 +59,7 @@ If we want to add a specific value as a type, we can quite easily do so;
 
 Here we make sure that the argument "resultConversion" is always either "as-number" OR "as-text".
 
----
+---------------------------------------------------------------------------------------------------------
 
 Type aliases // Custom types
 
@@ -71,17 +68,83 @@ We can also create custom types/aliases, this is useful for creating smaller-reu
 Consider following example;
 
 +------------------------------------------------------+
-| type Combinable = number | string; |
+| type Combinable = number | string;                   |
 | type ConversionDescriptor = "as-number" | "as-text"; |
-| |
-| const combine = ( |
-| a: Combinable, |
-| b: Combinable, |
-| resultConversion: ConversionDescriptor |
-| ){ |
-| //function body |
-| } |
+|                                                      |
+| const combine = (                                    |
+| a: Combinable,                                       |
+| b: Combinable,                                       |
+| resultConversion: ConversionDescriptor               |
+| ){                                                   |
+| //function body                                      |
+| }                                                    |
 +------------------------------------------------------+
 
 Instead of doing a: string | number and the same for B, we can create a custom type and use it for both.
 Same is true for resultConversion, that way we have a centralized place for our types.
+
+---------------------------------------------------------------------------------------------------------
+
+Classes
+
+We can define special properties in classes that will get checked during development. 
+
++------------------------------------------------------------------------------------------------------+
+| class Department {                                                                                   |
+|   private employees: string[] = [];                                                                  |
+|   constructor(private readonly id: string, private name: string) {                                   |
+|   }                                                                                                  |
+|   describe() {                                                                                       |
+|     console.log(                                                                                     |
+|       `This is the ${this.name.toLocaleLowerCase()} department with id of: ${this.id.toUpperCase()}` |
+|     );                                                                                               |
+|     return this;                                                                                     |
+|   }                                                                                                  |
+|   addEmployee(employee: string) {                                                                    |
+|     this.employees.push(employee);                                                                   |
+|   }                                                                                                  |
+|   printEmployeeInfo() {                                                                              |
+|     console.log(this.employees.length);                                                              |
+|     console.log(this.employees);                                                                     |
+|   }                                                                                                  |
+| }                                                                                                    |
++------------------------------------------------------------------------------------------------------+
+Firstly, we can define class properties like so;
+
+private employees: string[] = []
+
+Lets pick this apart.
+
+private means that that property cannot be accessed outside of the class. Meaning you cannot directly mutate it with "this.employees = "bla""
+It is important to note that private properties are only accessible through the inside the class where they are defined. It does not give access to classes that extend that class, if you want the behavior or private, but give access to extensions, then you can switch private for "protected". 
+
++------------------------------------------------------------------+
+| constructor(private readonly id: string, private name: string) { |
+|   }                                                              |
++------------------------------------------------------------------+
+
+in this seemingly weird constructor, we are using TypeScript short syntax for initializing our class.
+The above example would transpile down to:
+
++------------------------------+
+| constructor(id, name) {      |
+|         this.id = id;        |
+|         this.name = name;    |
+|         this.employees = []; |
+|     }                        |
++------------------------------+
+
+Not only is it a shorter (albeit weird) syntax, it will also make sure that id is not mutable anywhere, and the readonly property will make sure it cannot be changed after initialization.
+---------------------------------------------------------------------------------------------------------
+
+Abstract class features.
+
+We can also set abstract class features for when you want each iteration of a class to have a certain method or property, but you know each iteration of the class needs to implement it slightly different, but still force them to have it. 
+
+
++----------------------------------------------+
+| abstract class Department {                  |
+|   abstract describe(this: Department): void; |
++----------------------------------------------+
+
+This forces the next iteration of the class to have a describe method, specifically with return void.
