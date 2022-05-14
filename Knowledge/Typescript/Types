@@ -148,3 +148,82 @@ We can also set abstract class features for when you want each iteration of a cl
 +----------------------------------------------+
 
 This forces the next iteration of the class to have a describe method, specifically with return void.
+Another note: When we set the return type of void, we are telling TS that this return value should not be used anywhere.
+
+---------------------------------------------------------------------------------------------------------
+
+An interface is more or less a blueprint for how you want to structure your class.
+
++--------------------------------+
+| interface Greetable {          |
+|   readonly name: string;       |
+|   greet(phrase: string): void; |
+| }                              |
++--------------------------------+
+
++-------------------------------------+
+| class Person implements Greetable { |
+|   name: string;                     |
+|   constructor(n: string) {          |
+|     this.name = n;                  |
+|   }                                 |
+|                                     |
+|   greet(phrase: string) {           |
+|     console.log(phrase);            |
+|   }                                 |
+| }                                   |
++-------------------------------------+
+
+In this example here we are saying that the class as we're implementing it should have a name and a greet method. You can also set the optional readonly property on the interface, forcing the class to implement a readonly property on the name property. 
+
++-------------------------------------+
+| interface Named {                   |
+|   name: string;                     |
+| }                                   |
+|                                     |
+| interface Greetable extends Named { |
+|   greet(phrase: string): void;      |
+| }                                   |
++-------------------------------------+
+
+Similar to classes, interfaces can also extend other interfaces. 
+
+
+Optional properties and methods work the same as optional chaining. We can for example say:
+
++-------------------+
+| interface Named { |
+|   name?: string;  |
+| }                 |
++-------------------+
+
+Here we are saying that the name property may or may not exist, we wont get an error if we leave it out,  but we will still get an error if we try to set a number to name.
+
+----------------------
+
+
+Typeguards is a concept that lets us stay flexible but still get the advantages of typescript.
+
+
++-------------------------------------------+
+| type Combinable = string | number         |
+|                                           |
+| const add= (a:Combinable,b:Combinable)=>{ |
+|     return a+b                            |
+| }                                         |
++-------------------------------------------+
+
+This will always error out because "Operator "+" cannot be assigned to types "Combinable".
+
+We can work around this with a refactor:
+
++---------------------------------------------------------+
+| const add= (a:Combinable,b:Combinable)=>{               |
+|     if(typeof a === "string" || typeof b === "string"){ |
+|         return a.toString() + b.toString()              |
+|     }                                                   |
+|     return a + b                                        |
+| }                                                       |
++---------------------------------------------------------+
+
+Here instead of making sure that a + b is a number when returned, we can always assume that they will be, because otherwise they would have been returned in the above statement. This will give 0 errors in TypeScript
