@@ -227,3 +227,5 @@ We can work around this with a refactor:
 +---------------------------------------------------------+
 
 Here instead of making sure that a + b is a number when returned, we can always assume that they will be, because otherwise they would have been returned in the above statement. This will give 0 errors in TypeScript
+
+It is worth noting that if you use the instanceof operator with interfaces and typeguards, then it will not work, because interfaces are not included in runtime. Hence sometimes you may want to use more traditional types.
