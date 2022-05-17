@@ -199,7 +199,7 @@ Optional properties and methods work the same as optional chaining. We can for e
 
 Here we are saying that the name property may or may not exist, we wont get an error if we leave it out,  but we will still get an error if we try to set a number to name.
 
-----------------------
+---------------------------------------------------------------------------------------------------------
 
 
 Typeguards is a concept that lets us stay flexible but still get the advantages of typescript.
@@ -229,3 +229,245 @@ We can work around this with a refactor:
 Here instead of making sure that a + b is a number when returned, we can always assume that they will be, because otherwise they would have been returned in the above statement. This will give 0 errors in TypeScript
 
 It is worth noting that if you use the instanceof operator with interfaces and typeguards, then it will not work, because interfaces are not included in runtime. Hence sometimes you may want to use more traditional types.
+---------------------------------------------------------------------------------------------------------
+Discriminated Unions;
+
+The motherload of switch statements.
+
+What we can do in TS is to check for the following:
+
+interface Bird {
+  type: "bird";
+  flyingSpeed: number;
+}
+
+interface Turtle {
+  type: "turtle";
+  swimmingSpeed: number;
+}
+
+type Animal = Bird | Turtle;
+
+const fn = (animal: Animal) => {
+  let speed;
+  switch (animal.type) {
+    case "bird":
+      speed = animal.flyingSpeed;
+      break;
+    case "turtle":
+      speed = animal.swimmingSpeed;
+      break;
+  }
+};
+
+---------------------------------------------------------------------------------------------------------
+Html Elements
+
+When we are selecting elements in the DOM, typescript will assume we return <SomeElement> || Null.
+
+To get around this, consider the following example:
+
+const input = <HTMLInputElement>document.querySelector(".value")!;
+
+In this example we put a ! at the end of our querySelector. This tells TypeScript that we know that this value will not return null. 
+We also put <HTMLInputElement> in front, to tell TypeScript that this is the element that will be returned. In React and similar languages we can't do this as it will mess with JSX. Instead, we can refactor it to this:
+
+const input = document.querySelector(".value")! as HTMLInputElement;
+
+
+---------------------------------------------------------------------------------------------------------
+
+Index properties
+
+This is saying that we don't know the length of the properties or the names of the properties, all we know is that the properties will have a string as a name and a value of a string
+
+interface ErrorContainer {
+  [prop: string]: string
+}
+
+const errorBad: ErrorContainer = {
+  email: "Not a valid email",
+  userName: "Must start with a valid character ",
+};
+---------------------------------------------------------------------------------------------------------
+
+
+Function overload
+
+Function overloads are intended to resolve when the return type can be either 1 type or another. 
+
+https://i.imgur.com/r9NUu7m.png
+
+
+Consider the following example:
+
++---------------------------------------------------------+
+| type Combinable = string | number;                      |
+| const add = (a: Combinable, b: Combinable) => {         |
+|   if (typeof a === "string" || typeof b === "string") { |
+|     return a.toString() + b.toString();                 |
+|   }                                                     |
+|   return a + b;                                         |
+| };                                                      |
+|                                                         |
+| const result = add("Jonathan", "Elf");                  |
++---------------------------------------------------------+
+
+If you hover over the result, it will tell you either Number or String. This can lead to some bad things.
+
+If you try to run result.split("") you will get an error saying that "split" does not exist on String | Number, this is because you can't call split on numbers, and we sometimes return numbers from our function.
+
+This can be resolved by doing this: 
+
++---------------------------------------------------------+
+| function add(a: number, b: number): number;             |
+| function add(a: Combinable, b: Combinable) {            |
+|   if (typeof a === "string" || typeof b === "string") { |
+|     return a.toString() + b.toString();                 |
+|   }                                                     |
+|   return a + b;                                         |
+| }                                                       |
++---------------------------------------------------------+
+
+This syntax makes it clear that if we call the function with 2 numbers, the return type will be a number. Same thing if we replace a: number with a: string, we can then make sure that the return type is string.
+
+"Why not just define a return type?" Because we don't know what the return type will be unless we specify which types the parameters we call the function with. Meaning, if we define a default return to be "number", we might get an error if we depend on that when we call the function with a string. 
+
+---------------------------------------------------------------------------------------------------------
+Built in Generics
+
+
++-------------------------------------------+
+| const promise = new Promise((res, rej)=>{ |
+|     setTimeout(() => {                    |
+|         res("This is done")               |
+|     }, 2000);                             |
+| })                                        |
++-------------------------------------------+
+
+If you hover over promise, you will see Promise<unknown>, because we know that the promise variable will return a promise, but we don't know what that promise will return.
+
+To resolve that we can do this;
+
++------------------------------------------------------------+
+| const promise: Promise<string> = new Promise((res, rej)=>{ |
+|     setTimeout(() => {                                     |
+|         res("This is done")                                |
+|     }, 2000);                                              |
+| })                                                         |
++------------------------------------------------------------+
+
+This way TS will know that promise will become a string at the end, and we are able to call string methods on promise without any issue. 
+
++------------------------------------------------------------+
+| const promise: Promise<string> = new Promise((res, rej)=>{ |
+|     setTimeout(() => {                                     |
+|         res("This is done")                                |
+|     }, 2000);                                              |
+| })                                                         |
+|                                                            |
+| promise.then(data =>{                                      |
+|     data.toUpperCase()                                     |
+| })                                                         |
++------------------------------------------------------------+
+
+Here TS wont give any warning because we know "data" will be a string.
+
++----------------------------------------------------------+
+| const promise: Promise<number> = new Promise((res, _)=>{ |
+|     setTimeout(() => {                                   |
+|         res("This is done") //error                      |
+|     }, 2000);                                            |
+| })                                                       |
+|                                                          |
+| promise.then(data =>{                                    |
+|     data.toUpperCase()      //error                      |
+| })                                                       |
++----------------------------------------------------------+
+
+Here we get 2 errors, TypeScript knows that we shouldn't return a string in the setTimeout function, and it knows we can't call toUpperCase on the data, because its suppose to be a number.
+
+---------------------------------------------------------------------------------------------------------
+
+Declaring our own generic types.
+
+
+If we were to do this;
++----------------------------------------------------+
+| const merge = (objA: object, objB: object)=>{      |
+| return Object.assign(objA, objB)                   |
+| }                                                  |
+|                                                    |
+| const mergedObj = merge({name: "kujo"}, {age: 32}) |
++----------------------------------------------------+
+
+Then we would run into problems trying to access mergedObj.name, because TS does not know about these properties on that object. If we add "as {name: string, age: number} at the end of const mergedObj... then it would work. There is a better way of doing this however;
+
++----------------------------------------------------+
+| const merge = <T, U>(objA: T, objB: U)=>{          |
+| return Object.assign(objA, objB)                   |
+| }                                                  |
+|                                                    |
+| const mergedObj = merge({name: "kujo"}, {age: 32}) |
++----------------------------------------------------+
+
+In this example, not only does TypeScript know about the name and age properties, it will also know about any properties that we will add. Basically what we are telling TS is that objA will have an unspecific type, can be array of strings, objects with arrays, but it will store w/e we give it in memory and then it will remember that for when we use the return value anywhere. 
+
+---------------------------------------------------------------------------------------------------------
+Type constraints
+
+Now, while this is great, it also raises some new issues, for instance, if we call mergedObj with 1 object and 1 number, it will "fail silently" in the background. What does this mean? Well, because object.assign works with 2 objects, thats how it merges them, it wont actually merge the number, because it is not an object. This is solved however with type-constraints 
+
++-------------------------------------------------------------------------+
+| const merge = <T extends object, U extends object>(objA: T, objB: U)=>{ |
+| return Object.assign(objA, objB)                                        |
+| }                                                                       |
++-------------------------------------------------------------------------+
+
+This ensures that objA and objB will be an object, and we wont fail silently anymore, we will get a warning if we try to call the function with anything other than objects.
+
+---------------------------------------------------------------------------------------------------------
+
+keyof
+
+
++------------------------------------------------------------------------------------+
+| const extractAndConvert = <T extends object, U extends keyof T>(obj: T, key: U)=>{ |
+|     return `Value: ${obj[key]}`                                                    |
+| }                                                                                  |
++------------------------------------------------------------------------------------+
+
+In this type constraint we are saying that U should be a key from the T object. If we pass in anything other than a key from the T object, we will get an error.
+
+
+---------------------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------------------
+
+Decorators.
+
+Decorators are used to write "meta-code" which just means code that is used to help you and other people to write code.
+
+Heres what a basic decorator might look like:
+
++-------------------------------------------------+
+| const Logger = (constructor: Function)=>{       |
+|     console.log("Logging")                      |
+|     console.log(constructor)                    |
+| }                                               |
+|                                                 |
+| @Logger                                         |
+| class Person {                                  |
+|     name= "Jonathan"                            |
+|                                                 |
+|     constructor(){                              |
+|         console.log("Creating person instance") |
+|     }                                           |
+| }                                               |
+|                                                 |
+| const pers = new Person()                       |
++-------------------------------------------------+
+
+The logger function will get invoked when javascript READS your class, not when you create a new instance of it. If you create multiple new instances of a class, it will still only happen once. 
